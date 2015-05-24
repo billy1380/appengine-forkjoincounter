@@ -100,6 +100,7 @@ public class CounterService implements ICounterService {
       } catch (InterruptedException e) {
       }
     }
+    
     List<Increment> results = ofy()
         .load()
         .type(Increment.class)
@@ -124,7 +125,7 @@ public class CounterService implements ICounterService {
 
     });
 
-    ofy().delete().entities(results);
+    ofy().delete().entities(results).now();
   }
 
   /**
