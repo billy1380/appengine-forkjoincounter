@@ -13,6 +13,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
+import com.googlecode.objectify.annotation.Index;
 import com.willshex.gson.json.shared.Jsonable;
 
 /**
@@ -23,6 +24,9 @@ import com.willshex.gson.json.shared.Jsonable;
 public class Increment extends Jsonable {
 
   @Id
+  Long id;
+
+  @Index
   public String name;
 
   public Integer size;
@@ -30,6 +34,8 @@ public class Increment extends Jsonable {
   @Override
   public JsonObject toJson() {
     JsonObject object = super.toJson();
+    JsonElement jsonId = id == null ? JsonNull.INSTANCE : new JsonPrimitive(id);
+    object.add("id", jsonId);
     JsonElement jsonName = name == null ? JsonNull.INSTANCE
         : new JsonPrimitive(name);
     object.add("name", jsonName);
@@ -42,6 +48,12 @@ public class Increment extends Jsonable {
   @Override
   public void fromJson(JsonObject jsonObject) {
     super.fromJson(jsonObject);
+    if (jsonObject.has("id")) {
+      JsonElement jsonId = jsonObject.get("id");
+      if (jsonId != null) {
+        id = Long.valueOf(jsonId.getAsLong());
+      }
+    }
     if (jsonObject.has("name")) {
       JsonElement jsonName = jsonObject.get("name");
       if (jsonName != null) {
@@ -54,6 +66,11 @@ public class Increment extends Jsonable {
         size = Integer.valueOf(jsonSize.getAsInt());
       }
     }
+  }
+
+  public Increment id(Long id) {
+    this.id = id;
+    return this;
   }
 
   public Increment name(String name) {

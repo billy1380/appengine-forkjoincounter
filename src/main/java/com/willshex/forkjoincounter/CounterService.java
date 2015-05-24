@@ -48,14 +48,17 @@ public class CounterService implements ICounterService {
   private boolean insert(String name, int delta) {
     Long index = (Long) memcache.get("index-" + name);
     if (index == null) {
-      memcache.put("index-" + name, Integer.valueOf(1));
+      memcache.put("index-" + name, Long.valueOf(1));
       index = (Long) memcache.get("index-" + name);
     }
 
-    String lock = String.format("%s-lock-%d", name, index.intValue());
-    Long writers = memcache.increment(lock, POW_2_16);
+    String lock = String.format("%s-lock-%d", name, index.longValue());
+    if (memcache.get(lock) == null) {
+      memcache.put(lock, Long.valueOf(0));
+    }
 
-    if (writers < POW_2_16) {
+    Long writers = memcache.increment(lock, POW_2_16);
+    if (writers.longValue() < POW_2_16) {
       memcache.increment(lock, -1L);
       return false;
     }
@@ -88,7 +91,7 @@ public class CounterService implements ICounterService {
     // busy wait for writers
     for (int i = 0; i < 20; i++) { // timeout after 5s
       if (memcache.get(lock) == null
-          || ((Integer) memcache.get(lock)).intValue() <= POW_2_15) {
+          || ((Long) memcache.get(lock)).longValue() <= POW_2_15) {
         break;
       }
 
@@ -102,7 +105,7 @@ public class CounterService implements ICounterService {
         .type(Increment.class)
         .filter("name",
             String.format("%s-%d", name, index.toString().hashCode()))
-        .order("__key__").list();
+        .orderKey(false).list();
 
     final long delta = sumIncrements(results);
     ofy().transact(new Work<Counter>() {

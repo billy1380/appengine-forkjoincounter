@@ -97,7 +97,7 @@ public class CounterServlet extends ContextAwareServlet {
     int seconds = 1;
     TaskOptions options = TaskOptions.Builder.withUrl("/counter")
         .taskName(String.format("%s-%d-%d", name, now / 30L, index.intValue()))
-        .etaMillis(now + (seconds * 1000)).param("counterName", name)
+        .etaMillis(now + (seconds * 1000)).param("name", name)
         .param("index", index.toString());
     options.method(Method.GET);
 
