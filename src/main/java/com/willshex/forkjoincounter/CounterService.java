@@ -95,10 +95,11 @@ public class CounterService implements ICounterService {
     String lock = String.format("%s-lock-%d", name, index.intValue());
     memcache.increment(lock, -POW_2_15); // You missed the boat
 
+    Long lockValue;
     // busy wait for writers
     for (int i = 0; i < 20; i++) { // timeout after 5s
-      if (memcache.get(lock) == null
-          || ((Long) memcache.get(lock)).longValue() <= POW_2_15) {
+      lockValue = (Long) memcache.get(lock);
+      if (lockValue == null || lockValue.longValue() <= POW_2_15) {
         break;
       }
 
