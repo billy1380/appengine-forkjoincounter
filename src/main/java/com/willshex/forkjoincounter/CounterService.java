@@ -80,7 +80,7 @@ public class CounterService implements ICounterService {
 
     // increment the running counter in memcache
     if (memcache.get(name) == null) {
-      value(name); // calling value puts the value in memcache
+      memcache.put(name, value(name));
     }
 
     memcache.increment(name, delta);
@@ -116,7 +116,7 @@ public class CounterService implements ICounterService {
         .orderKey(false).list();
 
     final long delta = sumIncrements(results);
-    Counter updated = ofy().transact(new Work<Counter>() {
+    ofy().transact(new Work<Counter>() {
       public Counter run() {
         Counter counter = ofy().load().type(Counter.class).id(name).now();
         if (counter == null) {
@@ -132,7 +132,6 @@ public class CounterService implements ICounterService {
 
     });
 
-    memcache.put(updated.name, updated.value);
     ofy().delete().entities(results).now();
   }
 
@@ -196,10 +195,13 @@ public class CounterService implements ICounterService {
    * @see com.willshex.forkjoincounter.ICounterService#value(java.lang.String)
    */
   public long value(String name) {
-    Counter counter = ofy().load().type(Counter.class).id(name).now();
-    Long value = counter == null ? Long.valueOf(0) : counter.value;
-    memcache.put(name, value);
+    Long value = (Long) memcache.get(name);
+
+    if (value == null) {
+      Counter counter = ofy().load().type(Counter.class).id(name).now();
+      value = counter == null ? Long.valueOf(0) : counter.value;
+    }
+
     return value;
   }
-
 }
