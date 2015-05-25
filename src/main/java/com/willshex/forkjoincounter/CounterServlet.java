@@ -32,6 +32,9 @@ public class CounterServlet extends ContextAwareServlet {
       .getName());
   private static final CounterService counterService = new CounterService();
 
+  private static final float BATCH_SIZE = Float.valueOf(
+      System.getProperty("batch.size", "1.0")).floatValue();
+
   /*
    * (non-Javadoc)
    * 
@@ -94,10 +97,9 @@ public class CounterServlet extends ContextAwareServlet {
 
     Queue queue = QueueFactory.getQueue("counter");
 
-    int seconds = 1;
     TaskOptions options = TaskOptions.Builder.withUrl("/counter")
         .taskName(String.format("%s-%d-%d", name, now / 30L, index.intValue()))
-        .etaMillis(now + (seconds * 1000)).param("name", name)
+        .etaMillis(now + (long) (BATCH_SIZE * 1000.0f)).param("name", name)
         .param("index", index.toString());
     options.method(Method.GET);
 
