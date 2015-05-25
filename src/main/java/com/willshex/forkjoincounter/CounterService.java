@@ -165,7 +165,9 @@ public class CounterService implements ICounterService {
    * int)
    */
   public void increment(String name, int delta) {
-    insert(name, delta);
+    while (!insert(name, delta)) {
+      // keep trying
+    }
   }
 
   /*
