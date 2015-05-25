@@ -27,7 +27,7 @@ public class Increment extends Jsonable {
   Long id;
 
   @Index
-  public String name;
+  public String index;
 
   public Integer size;
 
@@ -36,9 +36,9 @@ public class Increment extends Jsonable {
     JsonObject object = super.toJson();
     JsonElement jsonId = id == null ? JsonNull.INSTANCE : new JsonPrimitive(id);
     object.add("id", jsonId);
-    JsonElement jsonName = name == null ? JsonNull.INSTANCE
-        : new JsonPrimitive(name);
-    object.add("name", jsonName);
+    JsonElement jsonIndex = index == null ? JsonNull.INSTANCE
+        : new JsonPrimitive(index);
+    object.add("index", jsonIndex);
     JsonElement jsonSize = size == null ? JsonNull.INSTANCE
         : new JsonPrimitive(size);
     object.add("size", jsonSize);
@@ -54,10 +54,10 @@ public class Increment extends Jsonable {
         id = Long.valueOf(jsonId.getAsLong());
       }
     }
-    if (jsonObject.has("name")) {
-      JsonElement jsonName = jsonObject.get("name");
-      if (jsonName != null) {
-        name = jsonName.getAsString();
+    if (jsonObject.has("index")) {
+      JsonElement jsonIndex = jsonObject.get("index");
+      if (jsonIndex != null) {
+        index = jsonIndex.getAsString();
       }
     }
     if (jsonObject.has("size")) {
@@ -73,8 +73,8 @@ public class Increment extends Jsonable {
     return this;
   }
 
-  public Increment name(String name) {
-    this.name = name;
+  public Increment index(String index) {
+    this.index = index;
     return this;
   }
 

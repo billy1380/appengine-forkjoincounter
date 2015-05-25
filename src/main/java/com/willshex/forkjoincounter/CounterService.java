@@ -66,7 +66,7 @@ public class CounterService implements ICounterService {
     ofy()
         .save()
         .entity(
-            new Increment().size(delta).name(
+            new Increment().size(delta).index(
                 String.format("%s-%d", name, Long.toString(index).hashCode())))
         .now();
 
@@ -77,6 +77,13 @@ public class CounterService implements ICounterService {
     } finally {
       memcache.increment(lock, -1L);
     }
+
+    // increment the running counter in memcache
+    if (memcache.get(name) == null) {
+      value(name); // calling value puts the value in memcache
+    }
+
+    memcache.increment(name, delta);
 
     return true;
   }
@@ -100,16 +107,16 @@ public class CounterService implements ICounterService {
       } catch (InterruptedException e) {
       }
     }
-    
+
     List<Increment> results = ofy()
         .load()
         .type(Increment.class)
-        .filter("name",
+        .filter("index",
             String.format("%s-%d", name, index.toString().hashCode()))
         .orderKey(false).list();
 
     final long delta = sumIncrements(results);
-    ofy().transact(new Work<Counter>() {
+    Counter updated = ofy().transact(new Work<Counter>() {
       public Counter run() {
         Counter counter = ofy().load().type(Counter.class).id(name).now();
         if (counter == null) {
@@ -125,6 +132,7 @@ public class CounterService implements ICounterService {
 
     });
 
+    memcache.put(updated.name, updated.value);
     ofy().delete().entities(results).now();
   }
 
@@ -189,7 +197,9 @@ public class CounterService implements ICounterService {
    */
   public long value(String name) {
     Counter counter = ofy().load().type(Counter.class).id(name).now();
-    return counter == null ? 0L : counter.value.longValue();
+    Long value = counter == null ? Long.valueOf(0) : counter.value;
+    memcache.put(name, value);
+    return value;
   }
 
 }
